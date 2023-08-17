@@ -491,4 +491,4 @@ class Encoder:
 # )
 
 # print(ast.dump(ast.parse(open("test2.py").read())))
-print(ast.unparse(Encoder(open("test2.py").read()).parse()))
+print(ast.unparse(Encoder(open("test.py").read()).parse()))

@@ -5,7 +5,7 @@ import ast
 import builtins
 import random
 import time
-from typing import Any, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 import secrets
 import re
 import marshal
@@ -101,10 +101,9 @@ class Encoder:
     def __init__(self, source) -> None:
         self.enc = Enc()
         self.source = source
-        self.var = []
+        self.var = {'var':{'globals':{}}}
         self.AST_TREE = []
         self.INITIALIZE_TREE = []
-        self.var = []
         self.Initialize()
 
     def Initialize(self):
@@ -115,10 +114,11 @@ class Encoder:
                 built.remove(attr)
             built.insert(0, attr)
         for i in built:
+            alias = self.enc.hash(i, ValueType.NAME)
             self.INITIALIZE_TREE.append(
                 ast.Assign(
                     targets=[
-                        ast.Name(id=self.enc.hash(i, ValueType.NAME), ctx=ast.Store())
+                        ast.Name(id=alias, ctx=ast.Store())
                     ],
                     value=ast.Call(
                         func=self.Name(ast.Name(id="eval", ctx=ast.Load()), self.var),
@@ -160,29 +160,31 @@ class Encoder:
                     ),
                 )
             )
-            self.var.append(i)
+            self.var.update({i:{'node': ast.Name(id=i, ctx=ast.Load()), 'alias': alias}})
 
-    def Import(self, node: ast.Import | ast.ImportFrom, var: list):
+    def Import(self, node: ast.Import | ast.ImportFrom, var: Dict):
         for i in range(node.names.__len__()):
             if node.names[i].asname:
-                var.append(node.names[i].asname)
-                node.names[i].asname = self.enc.hash(
+                alias = self.enc.hash(
                     node.names[i].asname, ValueType.NAME
                 )
+                var.update({node.names[i].asname: {'node': node, 'alias': alias}})
+                node.names[i].asname = alias
             else:
-                var.append(node.names[i].name)
-                node.names[i].asname = self.enc.hash(node.names[i].name, ValueType.NAME)
+                alias = self.enc.hash(node.names[i].name, ValueType.NAME)
+                var.update({node.names[i].name: {'node': node, 'alias': alias}})
+                node.names[i].asname = alias
         return node
 
     def import_from(self, node: ast.ImportFrom, var):
         for i in range(node.names.__len__()):
             pass
 
-    def Call(self, node: ast.Call, var: list):
+    def Call(self, node: ast.Call, var: Dict):
         if isinstance(node.func, ast.Name):
             id = node.func.id
             if id in var:
-                node.func.id = self.enc.hash(id, ValueType.NAME)
+                node.func.id = var[id]['alias']
         node.func = self.expr(node.func, var)
 
         for arg in range(node.args.__len__()):
@@ -199,24 +201,24 @@ class Encoder:
                 node.args[arg] = self.expr(node.args[arg], var)
         return node
 
-    def For(self, node: ast.For, var: List[str]):
+    def For(self, node: ast.For, var: Dict):
         node.target = self.expr(node.target, var)
         for i, body in enumerate(node.body):
             node.body[i] = self.stmt(body, var)
         node.iter = self.expr(node.iter, var)
         return node
 
-    def Tuple(self, node: ast.Tuple, var: List[str]):
+    def Tuple(self, node: ast.Tuple, var: Dict):
         for i, child in enumerate(node.elts):
             node.elts[i] = self.expr(child, var)
         return node
 
-    def List_(self, node: ast.List, var: List[str]):
+    def List_(self, node: ast.List, var: Dict):
         for i, child in enumerate(node.elts):
             node.elts[i] = self.expr(child, var)
         return node
 
-    def BinOp(self, node: ast.BinOp, var: List[str]):
+    def BinOp(self, node: ast.BinOp, var: Dict):
         OP = {
             ast.Add: "__add__",
             ast.BitAnd: "__and__",
@@ -249,13 +251,14 @@ class Encoder:
     def Name(self, node: ast.Name, var):
         if isinstance(node.ctx, ast.Load):
             if node.id in var:
-                node.id = self.enc.hash(node.id, ValueType.NAME)
+                node.id = var[node.id]['alias']
         elif isinstance(node.ctx, ast.Store):
-            var.append(node.id)
+            id=node.id
             node.id = self.enc.hash(node.id, ValueType.NAME)
+            var.update({id: {'node': node, 'alias': node.id}})
         return node
 
-    def Expr(self, node, var: List):
+    def Expr(self, node, var: Dict):
         return ast.Expr(value=self.expr(node.value, var))
 
     def replace(self, node, var):
@@ -267,7 +270,7 @@ class Encoder:
             return self.AST(node, var)
         return node
 
-    def Assign(self, node: ast.Assign, var: List[str]):
+    def Assign(self, node: ast.Assign, var: Dict):
         for target in range(node.targets.__len__()):
             if isinstance(node.targets[target], ast.Attribute):
                 node.targets[target] = self.Attribute(
@@ -280,7 +283,7 @@ class Encoder:
         return node
 
     def Attribute(
-        self, node: ast.Attribute, var: List[str], value: Optional[ast.expr] = None
+        self, node: ast.Attribute, var: Dict, value: Optional[ast.expr] = None
     ):
         if isinstance(node.value, ast.Name):
             if value:
@@ -344,51 +347,60 @@ class Encoder:
             return self.ConstantString(node.value, var)
         return node
 
-    def Return(self, node: ast.Return, var: List[str]):
+    def Return(self, node: ast.Return, var: Dict):
         node.value = self.expr(node.value, var)
         return node
 
     def Arg(self, node: ast.arg, var):
         if node.arg not in var:
-            var.append(node.arg)
-        node.arg = self.enc.hash(node.arg, ValueType.NAME)
+            alias = self.enc.hash(node.arg, ValueType.NAME)
+            var.update({node.arg: {'node': node, 'alias': alias}})
+        else:
+            node.arg = var[node.arg]['alias']
         return node
 
-    def FunctionDef(self, node: ast.FunctionDef, var: List[str]):
-        var.append(node.name)
-        node.name = self.enc.hash(node.name, ValueType.NAME)
-        var = var.copy()
+    def FunctionDef(self, node: ast.FunctionDef, var: Dict):
+        node_name = node.name
+        if node.name not in var:
+            alias = self.enc.hash(node.name, ValueType.NAME)
+            if var['var'].get('locals') is None:
+                var['var']['globals'].update({node_name: {'node': node, 'alias': alias, 'var': {'globals':var['globals'], 'locals':{}}}})
+            else:
+                var['var']['locals'].update({node_name: {'node': node, 'alias': alias, 'var': {'globals':var['globals'], 'locals':{}}}})
+            node.name = alias
+        else:
+            node.name = var[node.name]['alias']
         node.returns = None
         node.decorator_list = [self.expr(n, var) for n in node.decorator_list]
         for arg in range(node.args.args.__len__()):
             node.args.args[arg] = self.Arg(node.args.args[arg], var)
         for child in range(node.body.__len__()):
             node.body[child] = self.stmt(node.body[child], var)
+        if not (var.get('attributes') is None):
+            print('ada attr')            var['attributes'].update({node_name: {'node': node, 'alias': node.name, 'var': {'globals': var['globals'], 'locals':{}}}})
         return node
 
-    def ClassDef(self, node: ast.ClassDef, var: List[str]):
+    def ClassDef(self, node: ast.ClassDef, var: Dict):
         r_name = node.name
         node.name = self.enc.hash(node.name, ValueType.NAME)
-        var.append(r_name)
+        var.update({r_name: {'node': node, 'alias': node.name, 'attributes':{}}})
         var = var.copy()
-        node.decorator_list = [self.expr(i, var) for i in node.decorator_list]
-        node.bases = [self.expr(i, var) for i in node.bases]
+        node.decorator_list = [self.expr(i, var[r_name]) for i in node.decorator_list]
+        node.bases = [self.expr(i, var[r_name]) for i in node.bases]
         node.body = [
             body
-            if isinstance(body, (ast.Assign, ast.FunctionDef))
+            if isinstance(body, (ast.Assign))
             else self.stmt(body, var)
             for body in node.body
         ]
         clsdict = ast.Dict(keys=[], values=[])
-        for i, cbody in enumerate(node.body):
-            if isinstance(cbody, ast.FunctionDef):
-                self.INITIALIZE_TREE.append(cbody)
-                clsdict.keys.append(ast.Constant(value=cbody.name))
-                node.body[i] = self.FunctionDef(cbody, var)
-                clsdict.values.append(ast.Name(id=node.body[i].name, ctx=ast.Load()))  # type: ignore
-            elif isinstance(cbody, ast.Assign):
-                cbody.targets
-                print(ast.dump(cbody))
+        print(var[r_name]['attributes'])
+        # for i, cbody in enumerate(node.body):
+        #     if isinstance(cbody, ast.FunctionDef):
+        #         self.INITIALIZE_TREE.append(cbody)
+        #         clsdict.keys.append(ast.Constant(value=cbody.name))
+        #         node.body[i] = self.FunctionDef(cbody, var)
+        #         clsdict.values.append(ast.Name(id=node.body[i].name, ctx=ast.Load()))  # type: ignore
         new_node = ast.Call(
             func=ast.Name(id="type", ctx=ast.Load()),
             args=[
@@ -401,44 +413,45 @@ class Encoder:
         return ast.Assign(
             targets=[ast.Name(id=node.name, ctx=ast.Store())], value=new_node
         )
-    def Try(self, node: ast.Try, var: List[str]):
+    def Try(self, node: ast.Try, var: Dict):
         for i, body in enumerate(node.body):
             node.body[i] = self.stmt(body, var)
         node.handlers = [self.ExceptHandler(exc, var) for exc in node.handlers]
         return node
-    def ExceptHandler(self, node: ast.ExceptHandler, var: List[str]):
+    def ExceptHandler(self, node: ast.ExceptHandler, var: Dict):
+        alias = self.enc.hash(node.name, ValueType.NAME)
         if node.name and node.name not in var:
-            var.append(node.name)
-        node.name = self.enc.hash(node.name, ValueType.NAME)
+            var.update({node.name: {'node': node, 'alias': alias}})
+        node.name = alias
         node.type = self.expr(node.type, var)
         for i, body in enumerate(node.body):
             node.body[i] = self.stmt(body, var)
         return node
 
-    def Raise(self, node: ast.Raise, var: List[str]):
+    def Raise(self, node: ast.Raise, var: Dict):
         node.exc = self.expr(node.exc, var)
         return node
-    def JoinedStr(self, node: ast.JoinedStr, var: List[str]):
+    def JoinedStr(self, node: ast.JoinedStr, var: Dict):
         node.values = [self.expr(value, var) for value in node.values]
         return node
-    def FormattedValue(self, node: ast.FormattedValue, var: List[str]):
+    def FormattedValue(self, node: ast.FormattedValue, var: Dict):
         node.value = self.expr(node.value, var)
         return node
-    def If(self, node: ast.If, var: List[str]):
+    def If(self, node: ast.If, var: Dict):
         node.test = self.expr(node.test, var)
         for i, body in enumerate(node.body):
             node.body[i] = self.stmt(body, var)
         return node
-    def ListComp(self, node: ast.ListComp, var: List[str]):
+    def ListComp(self, node: ast.ListComp, var: Dict):
         node.generators = [self.comprehenstion(gen, var) for gen in node.generators]
         node.elt = self.expr(node.elt, var)
         return node
-    def comprehenstion(self, node: ast.comprehension, var: List[str]):
+    def comprehenstion(self, node: ast.comprehension, var: Dict):
         node.iter = self.expr(node.iter, var)
         node.target = self.expr(node.target, var)
         node.ifs = [self.expr(_if, var) for _if in node.ifs]
         return node
-    def Compare(self, node: ast.Compare, var: List[str]):
+    def Compare(self, node: ast.Compare, var: Dict):
         node.left = self.expr(node.left, var)
         node.comparators = [self.expr(xo, var) for xo in node.comparators]
         # if node.ops.__len__() == 1:
@@ -461,7 +474,7 @@ class Encoder:
         #         ops_.append(ast.Call(func=ast.Attribute(value=node.left, attr=find(op), ctx=ast.Load()), args=[comp], keywords=[]))
         return node
 
-    def parse(self, var: Optional[List[str]] = None):
+    def parse(self, var: Optional[Dict] = None):
         var = var.copy() if var else self.var
         for node in ast.parse(self.source).body:
             self.AST_TREE.append(self.replace(node, var))
@@ -469,7 +482,7 @@ class Encoder:
             ast.Module(body=[*self.INITIALIZE_TREE, *self.AST_TREE], type_ignores=[])
         )
 
-    def stmt(self, node: ast.stmt, var: List[str]):
+    def stmt(self, node: ast.stmt, var: Dict):
         if isinstance(node, ast.For):
             return self.For(node, var)
         elif isinstance(node, ast.FunctionDef):

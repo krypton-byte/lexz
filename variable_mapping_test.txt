@@ -1,0 +1,53 @@
+{
+  filename: 'test.py',
+  vars: {
+    oke: {
+      alias: 'oke',
+      vars: {
+      },
+      name: 'oke',
+      annotate: 'Any',
+    },
+    HelloWorld: {
+      alias: 'HelloWorld',
+      vars: {
+        K: {
+          alias: 'K',
+          vars: {
+          },
+          name: 'K',
+          annotate: 'Any',
+        },
+        __init__: {
+          alias: '__init__',
+          vars: {
+            self: {
+              alias: 'self',
+              vars: {.....},
+              name: 'self',
+              annotate: 'Self',
+            },
+            a: {
+              alias: 'a',
+              vars: {
+              },
+              name: 'a',
+              annotate: 'Any',
+            },
+            b: {
+              alias: 'b',
+              vars: {
+              },
+              name: 'b',
+              annotate: 'Any',
+            },
+          },
+          name: '__init__',
+          annotate: 'Any',
+        },
+      },
+      name: 'HelloWorld',
+      annotate: 'Type',
+    },
+  },
+}

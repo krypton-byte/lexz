@@ -3,13 +3,17 @@ Remapping Variable
 """
 
 import ast
+import types
 from typing import (
     Callable,
+    Generic,
     List,
     Literal,
     Optional,
-    Type
+    Type,
+    Union
 )
+import typing
 from dict2object import JSObject
 import json
 from typing import TypeVar
@@ -166,15 +170,20 @@ class Collector:
         self.__ast = []
 
     def Node(
-        self, node: Type[T]
-    ) -> Callable[[Callable[[T, VariableMapping], VariableMapping]], None]:
+        self, ast_node: typing.Union[Type[T], types.UnionType]
+    ) -> Callable[[Callable[[T, VariableMapping], VariableMapping]], Callable[[T, VariableMapping], VariableMapping]]:
         def Func(f: Callable[[T, VariableMapping], VariableMapping]):
-            if ast.AST in node.__bases__:
-                self.__ast.append((f, node))
-            elif ast.expr in node.__bases__:
-                self.__expr.append((f, node))
-            elif ast.stmt in node.__bases__:
-                self.__stmt.append((f, node))
+            if isinstance(ast_node, types.UnionType):
+                for node_type in ast_node.__args__:
+                    self.Node(node_type)(f)
+            else:
+                if ast.AST in ast_node.__bases__:
+                    self.__ast.append((f, ast_node))
+                elif ast.expr in ast_node.__bases__:
+                    self.__expr.append((f, ast_node))
+                elif ast.stmt in ast_node.__bases__:
+                    self.__stmt.append((f, ast_node))
+            return f
         return Func
 
     def send_node(self, node: ast.AST, var: VariableMapping) -> VariableMapping:
@@ -211,8 +220,8 @@ def NamedExpr(node: ast.NamedExpr, var: VariableMapping):
     collect.send_node(node.value, var)
     return var
 
-@collect.Node(ast.For)
-def For(node: ast.For, var: VariableMapping):
+@collect.Node(ast.For | ast.AsyncFor)
+def For(node: ast.For | ast.AsyncFor, var: VariableMapping):
     collect.send_node(node.target, var)
     collect.send_node(node.iter, var)
     for body in node.body:
@@ -242,12 +251,24 @@ def Attribute(node: ast.Attribute, var: VariableMapping):
     return var
 
 
-@collect.Node(ast.FunctionDef)
-def FunctionDef(node: ast.FunctionDef, var: VariableMapping):
+@collect.Node(ast.FunctionDef | ast.AsyncFunctionDef)
+def FunctionDef(node: ast.FunctionDef | ast.AsyncFunctionDef, var: VariableMapping):
     n_var = var.create(node.name, node.name, node)
     collect.send_node(node.args, n_var)
     for body in node.body:
         collect.send_node(body, n_var)
+    return var
+
+
+@collect.Node(ast.Await)
+def Await(node: ast.Await, var: VariableMapping):
+    collect.send_node(node.value, var)
+    return var
+
+@collect.Node(ast.Yield | ast.YieldFrom)
+def Yield(node: ast.Yield | ast.YieldFrom, var: VariableMapping):
+    if node.value:
+        collect.send_node(node.value, var)
     return var
 
 
@@ -305,6 +326,20 @@ def Call(node: ast.Call, var: VariableMapping):
         collect.send_node(arg, var)
     return var
 
+@collect.Node(ast.With | ast.AsyncWith)
+def With(node: ast.With | ast.AsyncWith, var: VariableMapping):
+    for item in node.items:
+        collect.send_node(item, var)
+    for body in node.body:
+        collect.send_node(body, var)
+    return var
+
+@collect.Node(ast.withitem)
+def withitem(node: ast.withitem, var: VariableMapping):
+    collect.send_node(node.context_expr, var)
+    if node.optional_vars:
+        collect.send_node(node.optional_vars, var)
+    return var
 # collect.send_node(ast.Name(id='a', ctx=ast.Store()),VariableMapping('e'))
 
 

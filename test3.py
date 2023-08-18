@@ -1,5 +1,2 @@
-class Z:
-    class F:
-        pass
-
-Z.F
+def a():
+    yield from []

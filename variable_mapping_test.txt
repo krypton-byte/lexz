@@ -1,53 +1,163 @@
 {
-  filename: 'test.py',
-  vars: {
-    oke: {
-      alias: 'oke',
-      vars: {
-      },
-      name: 'oke',
-      annotate: 'Any',
-    },
-    HelloWorld: {
-      alias: 'HelloWorld',
-      vars: {
-        K: {
-          alias: 'K',
-          vars: {
-          },
-          name: 'K',
-          annotate: 'Any',
+    "filename": "test.py",
+    "vars": {
+        "oke": {
+            "alias": "oke",
+            "vars": {},
+            "name": "oke",
+            "annotate": "Any"
         },
-        __init__: {
-          alias: '__init__',
-          vars: {
-            self: {
-              alias: 'self',
-              vars: {.....},
-              name: 'self',
-              annotate: 'Self',
+        "HelloWorld": {
+            "alias": "HelloWorld",
+            "vars": {
+                "K": {
+                    "alias": "K",
+                    "vars": {},
+                    "name": "K",
+                    "annotate": "Any",
+                    "node": {
+                        "line_no": [
+                            3,
+                            3
+                        ],
+                        "col_offset": [
+                            4,
+                            5
+                        ]
+                    }
+                },
+                "__init__": {
+                    "alias": "__init__",
+                    "vars": {
+                        "self": {
+                            "alias": "self",
+                            "vars": {},
+                            "name": "self",
+                            "annotate": "Self",
+                            "node": {
+                                "line_no": [
+                                    5,
+                                    5
+                                ],
+                                "col_offset": [
+                                    17,
+                                    21
+                                ]
+                            }
+                        },
+                        "a": {
+                            "alias": "a",
+                            "vars": {},
+                            "name": "a",
+                            "annotate": "Any",
+                            "node": {
+                                "line_no": [
+                                    5,
+                                    5
+                                ],
+                                "col_offset": [
+                                    23,
+                                    24
+                                ]
+                            }
+                        },
+                        "b": {
+                            "alias": "b",
+                            "vars": {},
+                            "name": "b",
+                            "annotate": "Any",
+                            "node": {
+                                "line_no": [
+                                    5,
+                                    5
+                                ],
+                                "col_offset": [
+                                    26,
+                                    27
+                                ]
+                            }
+                        },
+                        "c": {
+                            "alias": "c",
+                            "vars": {},
+                            "name": "c",
+                            "annotate": "Any",
+                            "node": {
+                                "line_no": [
+                                    8,
+                                    8
+                                ],
+                                "col_offset": [
+                                    8,
+                                    16
+                                ]
+                            }
+                        }
+                    },
+                    "name": "__init__",
+                    "annotate": "Any",
+                    "node": {
+                        "line_no": [
+                            5,
+                            8
+                        ],
+                        "col_offset": [
+                            4,
+                            18
+                        ]
+                    }
+                },
+                "a": {
+                    "alias": "a",
+                    "vars": {},
+                    "name": "a",
+                    "annotate": "Any",
+                    "node": {
+                        "line_no": [
+                            6,
+                            6
+                        ],
+                        "col_offset": [
+                            8,
+                            14
+                        ]
+                    }
+                },
+                "b": {
+                    "alias": "b",
+                    "vars": {},
+                    "name": "b",
+                    "annotate": "Any",
+                    "node": {
+                        "line_no": [
+                            7,
+                            7
+                        ],
+                        "col_offset": [
+                            8,
+                            14
+                        ]
+                    }
+                },
+                "Z": {
+                    "alias": "Z",
+                    "vars": {},
+                    "name": "Z",
+                    "annotate": "Any",
+                    "node": {
+                        "line_no": [
+                            11,
+                            11
+                        ],
+                        "col_offset": [
+                            0,
+                            12
+                        ]
+                    }
+                }
             },
-            a: {
-              alias: 'a',
-              vars: {
-              },
-              name: 'a',
-              annotate: 'Any',
-            },
-            b: {
-              alias: 'b',
-              vars: {
-              },
-              name: 'b',
-              annotate: 'Any',
-            },
-          },
-          name: '__init__',
-          annotate: 'Any',
-        },
-      },
-      name: 'HelloWorld',
-      annotate: 'Type',
-    },
-  },
+            "name": "HelloWorld",
+            "annotate": "Type"
+        }
+    }
 }

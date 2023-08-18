@@ -1,11 +1,8 @@
-import ast as oke
 class HelloWorld:
-    K=2
-    @classmethod
-    def __init__(self, a, b):
-        self.a=a
-        self.b=b
-        self.a.c=2
-
-
-HelloWorld.Z=2
+    def __init__(self) -> None:
+        self.a = 3
+        class HelloWorld2:
+            def __init__(selx) -> None:
+                selx.a=3
+                for x in range(10):
+                    self.forr = x

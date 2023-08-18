@@ -3,11 +3,16 @@ Remapping Variable
 """
 
 import ast
-from typing import Any, Callable, Dict, List, Literal, Optional, Type
+from typing import (
+    Callable,
+    List,
+    Literal,
+    Optional,
+    Type
+)
 from dict2object import JSObject
 import json
 from typing import TypeVar
-import argparse
 
 
 T = TypeVar("T")
@@ -24,13 +29,15 @@ def remove_circular_refs(ob, _seen=None):
     if isinstance(ob, dict):
         res = {
             remove_circular_refs(k, _seen): remove_circular_refs(v, _seen)
-            for k, v in ob.items()}
+            for k, v in ob.items()
+        }
     elif isinstance(ob, (list, tuple, set, frozenset)):
         res = type(ob)(remove_circular_refs(v, _seen) for v in ob)
     # remove id again; only *nested* references count
     _seen.remove(id(ob))
     return res
-            
+
+
 class VariableMapping:
     def __init__(
         self,
@@ -56,6 +63,9 @@ class VariableMapping:
         node: ast.AST,
         annotate: Literal["Type", "Any", "Self"] = "Any",
     ):
+        """
+        creating variable
+        """
         if self.position:
             data = self.vars
             for i in self.position:
@@ -71,8 +81,8 @@ class VariableMapping:
                         "annotate": annotate,
                         "node": {
                             "line_no": [node.lineno, node.end_lineno],
-                            "col_offset": [node.col_offset, node.end_col_offset]
-                        }
+                            "col_offset": [node.col_offset, node.end_col_offset],
+                        },
                     }
                 }
             )
@@ -83,7 +93,11 @@ class VariableMapping:
         return self.__class__(self.filename, self.vars, [*self.position, name])
 
     def Normalizer(self):
+        """
+        Remove Circular Reference
+        """
         return remove_circular_refs(self.vars.copy())
+
     def create_class(self, name: str, alias: str, node: ast.AST):
         n = self.create(name, alias, node, annotate="Type")
         return n
@@ -95,6 +109,9 @@ class VariableMapping:
         return data
 
     def find_variable(self, vname):
+        """
+        find variable from down to top
+        """
         if self.position:
             for i in range(self.position.__len__(), 0, -1):
                 post = self.position.copy()[:i]
@@ -109,6 +126,9 @@ class VariableMapping:
         raise IndexError
 
     def delete(self):
+        """
+        Delete Variable
+        """
         del self.__class__(
             self.filename, self.vars, self.position.copy()[:-1]
         ).current()[self.position[-1]]
@@ -121,9 +141,15 @@ class VariableMapping:
         return self.jump(1)
 
     def jump(self, level: int):
+        """
+        jump to parent stack
+        """
         return self.__class__(self.filename, self.vars, self.position[:-level])
 
     def copy(self):
+        """
+        copy variable with vars reference
+        """
         return self.__class__(self.filename, self.vars, self.position.copy())
 
     def __repr__(self) -> str:
@@ -138,7 +164,9 @@ class Collector:
         self.__expr = []
         self.__ast = []
 
-    def Node(self, node: Type[T]):
+    def Node(
+        self, node: Type[T]
+    ) -> Callable[[Callable[[T, VariableMapping], VariableMapping]], None]:
         def Func(f: Callable[[T, VariableMapping], VariableMapping]):
             if ast.AST in node.__bases__:
                 self.__ast.append((f, node))
@@ -146,10 +174,9 @@ class Collector:
                 self.__expr.append((f, node))
             elif ast.stmt in node.__bases__:
                 self.__stmt.append((f, node))
-
         return Func
 
-    def send_node(self, node: object, var: VariableMapping) -> VariableMapping:
+    def send_node(self, node: ast.AST, var: VariableMapping) -> VariableMapping:
         functions = []
         if ast.AST in node.__class__.__bases__:
             functions = self.__ast
@@ -166,6 +193,26 @@ class Collector:
 collect = Collector()
 
 
+@collect.Node(ast.Expr)
+def Expr(node: ast.Expr, var: VariableMapping):
+    collect.send_node(node.value, var)
+    return var
+
+
+@collect.Node(ast.NamedExpr)
+def NamedExpr(node: ast.NamedExpr, var: VariableMapping):
+    collect.send_node(node.target, var)
+    collect.send_node(node.value, var)
+    return var
+
+@collect.Node(ast.For)
+def For(node: ast.For, var: VariableMapping):
+    collect.send_node(node.target, var)
+    collect.send_node(node.iter, var)
+    for body in node.body:
+        collect.send_node(body, var)
+    return var
+
 @collect.Node(ast.Name)
 def Name(node: ast.Name, var: VariableMapping):
     if isinstance(node.ctx, ast.Store):
@@ -179,12 +226,14 @@ def Assign(node: ast.Assign, var: VariableMapping):
         collect.send_node(target, var)
     return var
 
+
 @collect.Node(ast.Attribute)
 def Attribute(node: ast.Attribute, var: VariableMapping):
     n_var = collect.send_node(node.value, var)
     if isinstance(node.ctx, ast.Store):
         n_var.create(node.attr, node.attr, node)
     return var
+
 
 @collect.Node(ast.FunctionDef)
 def FunctionDef(node: ast.FunctionDef, var: VariableMapping):
@@ -194,11 +243,13 @@ def FunctionDef(node: ast.FunctionDef, var: VariableMapping):
         collect.send_node(body, n_var)
     return var
 
+
 @collect.Node(ast.arguments)
 def arguments(node: ast.arguments, var: VariableMapping):
     for arg in node.args:
         collect.send_node(arg, var)
     return var
+
 
 @collect.Node(ast.arg)
 def arg(node: ast.arg, var: VariableMapping):
@@ -215,6 +266,7 @@ def arg(node: ast.arg, var: VariableMapping):
     )
     return var
 
+
 @collect.Node(ast.ClassDef)
 def ClassDef(node: ast.ClassDef, var: VariableMapping):
     n_var = var.create_class(node.name, node.name, node)
@@ -222,11 +274,13 @@ def ClassDef(node: ast.ClassDef, var: VariableMapping):
         collect.send_node(body, n_var)
     return var
 
+
 @collect.Node(ast.Import)
 def Import(node: ast.Import, var: VariableMapping):
     for i in node.names:
         collect.send_node(i, var)
     return var
+
 
 @collect.Node(ast.alias)
 def alias(node: ast.alias, var: VariableMapping):
@@ -251,9 +305,9 @@ class VarExtractor:
         print(ast.dump(Node))
 
 
-x=VarExtractor("test.py")
+x = VarExtractor("test.py")
 x.run()
-open('variable_mapping_test.txt', 'w').write(json.dumps(x.var.Normalizer(), indent=4))
+open("variable_mapping_test.json", "w").write(json.dumps(x.var.Normalizer(), indent=4))
 # class_=VariableMapping('a.py').create_class('HelloWorld', 'HelloWorld')
 # class_.create('B', 'B')
 # class_.create('__init__','__init__').create('yahaha','ko')

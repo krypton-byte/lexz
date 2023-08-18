@@ -23,6 +23,22 @@
                                 ]
                             }
                         },
+                        "a": {
+                            "alias": "a",
+                            "vars": {},
+                            "name": "a",
+                            "annotate": "Any",
+                            "node": {
+                                "line_no": [
+                                    3,
+                                    3
+                                ],
+                                "col_offset": [
+                                    8,
+                                    14
+                                ]
+                            }
+                        },
                         "HelloWorld2": {
                             "alias": "HelloWorld2",
                             "vars": {
@@ -45,10 +61,26 @@
                                                 ]
                                             }
                                         },
-                                        "x": {
-                                            "alias": "x",
+                                        "a": {
+                                            "alias": "a",
                                             "vars": {},
-                                            "name": "x",
+                                            "name": "a",
+                                            "annotate": "Any",
+                                            "node": {
+                                                "line_no": [
+                                                    6,
+                                                    6
+                                                ],
+                                                "col_offset": [
+                                                    16,
+                                                    22
+                                                ]
+                                            }
+                                        },
+                                        "oke": {
+                                            "alias": "oke",
+                                            "vars": {},
+                                            "name": "oke",
                                             "annotate": "Any",
                                             "node": {
                                                 "line_no": [
@@ -56,8 +88,40 @@
                                                     7
                                                 ],
                                                 "col_offset": [
+                                                    16,
+                                                    24
+                                                ]
+                                            }
+                                        },
+                                        "i": {
+                                            "alias": "i",
+                                            "vars": {},
+                                            "name": "i",
+                                            "annotate": "Any",
+                                            "node": {
+                                                "line_no": [
+                                                    8,
+                                                    8
+                                                ],
+                                                "col_offset": [
                                                     20,
                                                     21
+                                                ]
+                                            }
+                                        },
+                                        "for_": {
+                                            "alias": "for_",
+                                            "vars": {},
+                                            "name": "for_",
+                                            "annotate": "Any",
+                                            "node": {
+                                                "line_no": [
+                                                    9,
+                                                    9
+                                                ],
+                                                "col_offset": [
+                                                    20,
+                                                    29
                                                 ]
                                             }
                                         }
@@ -67,27 +131,11 @@
                                     "node": {
                                         "line_no": [
                                             5,
-                                            8
+                                            9
                                         ],
                                         "col_offset": [
                                             12,
-                                            33
-                                        ]
-                                    }
-                                },
-                                "a": {
-                                    "alias": "a",
-                                    "vars": {},
-                                    "name": "a",
-                                    "annotate": "Any",
-                                    "node": {
-                                        "line_no": [
-                                            6,
-                                            6
-                                        ],
-                                        "col_offset": [
-                                            16,
-                                            22
+                                            31
                                         ]
                                     }
                                 }
@@ -97,11 +145,11 @@
                             "node": {
                                 "line_no": [
                                     4,
-                                    8
+                                    9
                                 ],
                                 "col_offset": [
                                     8,
-                                    33
+                                    31
                                 ]
                             }
                         }
@@ -111,43 +159,11 @@
                     "node": {
                         "line_no": [
                             2,
-                            8
+                            9
                         ],
                         "col_offset": [
                             4,
-                            33
-                        ]
-                    }
-                },
-                "a": {
-                    "alias": "a",
-                    "vars": {},
-                    "name": "a",
-                    "annotate": "Any",
-                    "node": {
-                        "line_no": [
-                            3,
-                            3
-                        ],
-                        "col_offset": [
-                            8,
-                            14
-                        ]
-                    }
-                },
-                "forr": {
-                    "alias": "forr",
-                    "vars": {},
-                    "name": "forr",
-                    "annotate": "Any",
-                    "node": {
-                        "line_no": [
-                            8,
-                            8
-                        ],
-                        "col_offset": [
-                            20,
-                            29
+                            31
                         ]
                     }
                 }
@@ -155,5 +171,6 @@
             "name": "HelloWorld",
             "annotate": "Type"
         }
-    }
+    },
+    "annotate": "Module"
 }

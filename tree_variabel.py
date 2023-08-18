@@ -53,6 +53,7 @@ class VariableMapping:
             else {
                 "filename": self.filename,
                 "vars": {},
+                "annotate": "Module"
             }
         )
 
@@ -192,6 +193,11 @@ class Collector:
 
 collect = Collector()
 
+@collect.Node(ast.Lambda)
+def Lambda(node: ast.Lambda, var: VariableMapping):
+    collect.send_node(node.args, var)
+    collect.send_node(node.body, var)
+    return var
 
 @collect.Node(ast.Expr)
 def Expr(node: ast.Expr, var: VariableMapping):
@@ -217,7 +223,8 @@ def For(node: ast.For, var: VariableMapping):
 def Name(node: ast.Name, var: VariableMapping):
     if isinstance(node.ctx, ast.Store):
         var.create(node.id, node.id, node)
-    return var.find_variable(node.id)
+        return var.find_variable(node.id)
+    return var
 
 
 @collect.Node(ast.Assign)
@@ -248,6 +255,10 @@ def FunctionDef(node: ast.FunctionDef, var: VariableMapping):
 def arguments(node: ast.arguments, var: VariableMapping):
     for arg in node.args:
         collect.send_node(arg, var)
+    if node.vararg:
+        collect.send_node(node.vararg, var)
+    if node.kwarg:
+        collect.send_node(node.kwarg, var)
     return var
 
 
@@ -287,6 +298,12 @@ def alias(node: ast.alias, var: VariableMapping):
     var.create(node.asname or node.name, node.asname or node.name, node)
     return var
 
+@collect.Node(ast.Call)
+def Call(node: ast.Call, var: VariableMapping):
+    collect.send_node(node.func, var)
+    for arg in node.args:
+        collect.send_node(arg, var)
+    return var
 
 # collect.send_node(ast.Name(id='a', ctx=ast.Store()),VariableMapping('e'))
 

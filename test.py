@@ -4,5 +4,6 @@ class HelloWorld:
         class HelloWorld2:
             def __init__(selx) -> None:
                 selx.a=3
-                for x in range(10):
-                    self.forr = x
+                self.oke = 8
+                for i in range(10):
+                    self.for_=i

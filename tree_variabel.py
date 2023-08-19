@@ -1,23 +1,23 @@
 """
 Remapping Variable
 """
-
+from __future__ import annotations
+import re
+import secrets
 import ast
 import types
 from typing import (
     Callable,
-    Generic,
+    Dict,
     List,
     Literal,
     Optional,
-    Type,
-    Union
+    Type
 )
 import typing
 from dict2object import JSObject
 import json
 from typing import TypeVar
-
 
 T = TypeVar("T")
 
@@ -42,6 +42,54 @@ def remove_circular_refs(ob, _seen=None):
     return res
 
 
+class GraphGen:
+    def __init__(self, var: dict) -> None:
+        self.initial = []
+        self.arrow = []  # 'A->B'
+        self.var = var
+        self.filename = re.findall(
+            r"^[a-z][a-z0-9]+", self.var["filename"], re.IGNORECASE
+        )[0]
+
+    def build_graph_string(self):
+        self.gen()
+        return "\n".join(
+            [
+                "digraph %s {" % self.filename,
+                " " * 4 + ("\n" + " " * 4).join([*self.initial, *self.arrow]),
+                "}",
+            ]
+        )
+
+    def shape(self, annotate: Literal["Type", "Self", "Any", "Module"]):
+        match annotate:
+            case "Type":
+                return "component"
+            case "Module":
+                return "note"
+            case "Self":
+                return "cds"
+        return "hexagon"
+
+    def gen(self, var: Optional[Dict] = None, parent: Optional[str] = None):
+        r_name = "_" + secrets.token_hex(5)
+        n_var = var if var else self.var
+        if parent:
+            for node_name, node_val in n_var["vars"].items():
+                r_name = "_" + secrets.token_hex(5)
+                self.initial.append(
+                    '%s [label="%s" shape="%s"]'
+                    % (r_name, node_name, self.shape(node_val["annotate"]))
+                )
+                self.arrow.append(f"{parent} -> {r_name}")
+                self.gen(node_val, r_name)
+        else:
+            self.initial.append(
+                '%s [label="%s" shape="folder"]' % (r_name, n_var["filename"])
+            )
+            self.gen(n_var, r_name)
+
+
 class VariableMapping:
     def __init__(
         self,
@@ -54,19 +102,19 @@ class VariableMapping:
         self.vars = (
             vars
             if vars
-            else {
-                "filename": self.filename,
-                "vars": {},
-                "annotate": "Module"
-            }
+            else {"filename": self.filename, "vars": {}, "annotate": "Module"}
         )
+
+    def graph_gen(self):
+        dot = GraphGen(self.Normalizer())
+        return dot.build_graph_string()
 
     def create(
         self,
         name: str,
         alias: str,
         node: ast.AST,
-        annotate: Literal["Type", "Any", "Self"] = "Any",
+        annotate: Literal["Type", "Any", "Self", "Callable"] = "Any",
     ):
         """
         creating variable
@@ -171,7 +219,10 @@ class Collector:
 
     def Node(
         self, ast_node: typing.Union[Type[T], types.UnionType]
-    ) -> Callable[[Callable[[T, VariableMapping], VariableMapping]], Callable[[T, VariableMapping], VariableMapping]]:
+    ) -> Callable[
+        [Callable[[T, VariableMapping], VariableMapping]],
+        Callable[[T, VariableMapping], VariableMapping],
+    ]:
         def Func(f: Callable[[T, VariableMapping], VariableMapping]):
             if isinstance(ast_node, types.UnionType):
                 for node_type in ast_node.__args__:
@@ -184,6 +235,7 @@ class Collector:
                 elif ast.stmt in ast_node.__bases__:
                     self.__stmt.append((f, ast_node))
             return f
+
         return Func
 
     def send_node(self, node: ast.AST, var: VariableMapping) -> VariableMapping:
@@ -202,11 +254,13 @@ class Collector:
 
 collect = Collector()
 
+
 @collect.Node(ast.Lambda)
 def Lambda(node: ast.Lambda, var: VariableMapping):
     collect.send_node(node.args, var)
     collect.send_node(node.body, var)
     return var
+
 
 @collect.Node(ast.Expr)
 def Expr(node: ast.Expr, var: VariableMapping):
@@ -220,6 +274,7 @@ def NamedExpr(node: ast.NamedExpr, var: VariableMapping):
     collect.send_node(node.value, var)
     return var
 
+
 @collect.Node(ast.For | ast.AsyncFor)
 def For(node: ast.For | ast.AsyncFor, var: VariableMapping):
     collect.send_node(node.target, var)
@@ -228,12 +283,16 @@ def For(node: ast.For | ast.AsyncFor, var: VariableMapping):
         collect.send_node(body, var)
     return var
 
+
 @collect.Node(ast.Name)
 def Name(node: ast.Name, var: VariableMapping):
     if isinstance(node.ctx, ast.Store):
         var.create(node.id, node.id, node)
+        return var
+    try:
         return var.find_variable(node.id)
-    return var
+    except IndexError:
+        return var
 
 
 @collect.Node(ast.Assign)
@@ -248,7 +307,7 @@ def Attribute(node: ast.Attribute, var: VariableMapping):
     n_var = collect.send_node(node.value, var)
     if isinstance(node.ctx, ast.Store):
         n_var.create(node.attr, node.attr, node)
-    return var
+    return n_var
 
 
 @collect.Node(ast.FunctionDef | ast.AsyncFunctionDef)
@@ -264,6 +323,7 @@ def FunctionDef(node: ast.FunctionDef | ast.AsyncFunctionDef, var: VariableMappi
 def Await(node: ast.Await, var: VariableMapping):
     collect.send_node(node.value, var)
     return var
+
 
 @collect.Node(ast.Yield | ast.YieldFrom)
 def Yield(node: ast.Yield | ast.YieldFrom, var: VariableMapping):
@@ -319,12 +379,14 @@ def alias(node: ast.alias, var: VariableMapping):
     var.create(node.asname or node.name, node.asname or node.name, node)
     return var
 
+
 @collect.Node(ast.Call)
 def Call(node: ast.Call, var: VariableMapping):
     collect.send_node(node.func, var)
     for arg in node.args:
         collect.send_node(arg, var)
     return var
+
 
 @collect.Node(ast.With | ast.AsyncWith)
 def With(node: ast.With | ast.AsyncWith, var: VariableMapping):
@@ -334,12 +396,15 @@ def With(node: ast.With | ast.AsyncWith, var: VariableMapping):
         collect.send_node(body, var)
     return var
 
+
 @collect.Node(ast.withitem)
 def withitem(node: ast.withitem, var: VariableMapping):
     collect.send_node(node.context_expr, var)
     if node.optional_vars:
         collect.send_node(node.optional_vars, var)
     return var
+
+
 # collect.send_node(ast.Name(id='a', ctx=ast.Store()),VariableMapping('e'))
 
 
@@ -353,14 +418,12 @@ class VarExtractor:
         Node = ast.parse(self.source)
         for body in Node.body:
             collect.send_node(body, self.var)
-        print(self.var)
-        print(ast.dump(Node))
+        # print(self.var)
+        # print(ast.dump(Node))
 
 
 x = VarExtractor("test.py")
 x.run()
 open("variable_mapping_test.json", "w").write(json.dumps(x.var.Normalizer(), indent=4))
-# class_=VariableMapping('a.py').create_class('HelloWorld', 'HelloWorld')
-# class_.create('B', 'B')
-# class_.create('__init__','__init__').create('yahaha','ko')
-# print(class_)
+# print(x.var)
+print(x.var.graph_gen())

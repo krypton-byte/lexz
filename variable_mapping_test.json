@@ -23,22 +23,6 @@
                                 ]
                             }
                         },
-                        "a": {
-                            "alias": "a",
-                            "vars": {},
-                            "name": "a",
-                            "annotate": "Any",
-                            "node": {
-                                "line_no": [
-                                    3,
-                                    3
-                                ],
-                                "col_offset": [
-                                    8,
-                                    14
-                                ]
-                            }
-                        },
                         "HelloWorld2": {
                             "alias": "HelloWorld2",
                             "vars": {
@@ -52,44 +36,12 @@
                                             "annotate": "Self",
                                             "node": {
                                                 "line_no": [
-                                                    5,
-                                                    5
-                                                ],
-                                                "col_offset": [
-                                                    25,
-                                                    29
-                                                ]
-                                            }
-                                        },
-                                        "a": {
-                                            "alias": "a",
-                                            "vars": {},
-                                            "name": "a",
-                                            "annotate": "Any",
-                                            "node": {
-                                                "line_no": [
                                                     6,
                                                     6
                                                 ],
                                                 "col_offset": [
-                                                    16,
-                                                    22
-                                                ]
-                                            }
-                                        },
-                                        "oke": {
-                                            "alias": "oke",
-                                            "vars": {},
-                                            "name": "oke",
-                                            "annotate": "Any",
-                                            "node": {
-                                                "line_no": [
-                                                    7,
-                                                    7
-                                                ],
-                                                "col_offset": [
-                                                    16,
-                                                    24
+                                                    25,
+                                                    29
                                                 ]
                                             }
                                         },
@@ -100,28 +52,12 @@
                                             "annotate": "Any",
                                             "node": {
                                                 "line_no": [
-                                                    8,
-                                                    8
-                                                ],
-                                                "col_offset": [
-                                                    20,
-                                                    21
-                                                ]
-                                            }
-                                        },
-                                        "for_": {
-                                            "alias": "for_",
-                                            "vars": {},
-                                            "name": "for_",
-                                            "annotate": "Any",
-                                            "node": {
-                                                "line_no": [
                                                     9,
                                                     9
                                                 ],
                                                 "col_offset": [
                                                     20,
-                                                    29
+                                                    21
                                                 ]
                                             }
                                         }
@@ -130,12 +66,28 @@
                                     "annotate": "Any",
                                     "node": {
                                         "line_no": [
-                                            5,
-                                            9
+                                            6,
+                                            10
                                         ],
                                         "col_offset": [
                                             12,
-                                            31
+                                            33
+                                        ]
+                                    }
+                                },
+                                "a": {
+                                    "alias": "a",
+                                    "vars": {},
+                                    "name": "a",
+                                    "annotate": "Any",
+                                    "node": {
+                                        "line_no": [
+                                            7,
+                                            7
+                                        ],
+                                        "col_offset": [
+                                            16,
+                                            22
                                         ]
                                     }
                                 },
@@ -149,8 +101,8 @@
                                             "annotate": "Self",
                                             "node": {
                                                 "line_no": [
-                                                    10,
-                                                    10
+                                                    12,
+                                                    12
                                                 ],
                                                 "col_offset": [
                                                     26,
@@ -165,8 +117,8 @@
                                             "annotate": "Any",
                                             "node": {
                                                 "line_no": [
-                                                    10,
-                                                    10
+                                                    12,
+                                                    12
                                                 ],
                                                 "col_offset": [
                                                     32,
@@ -181,28 +133,12 @@
                                             "annotate": "Any",
                                             "node": {
                                                 "line_no": [
-                                                    10,
-                                                    10
+                                                    12,
+                                                    12
                                                 ],
                                                 "col_offset": [
                                                     36,
                                                     37
-                                                ]
-                                            }
-                                        },
-                                        "j": {
-                                            "alias": "j",
-                                            "vars": {},
-                                            "name": "j",
-                                            "annotate": "Any",
-                                            "node": {
-                                                "line_no": [
-                                                    11,
-                                                    11
-                                                ],
-                                                "col_offset": [
-                                                    16,
-                                                    22
                                                 ]
                                             }
                                         },
@@ -213,28 +149,12 @@
                                             "annotate": "Any",
                                             "node": {
                                                 "line_no": [
-                                                    13,
-                                                    13
+                                                    15,
+                                                    15
                                                 ],
                                                 "col_offset": [
                                                     26,
                                                     27
-                                                ]
-                                            }
-                                        },
-                                        "tesx": {
-                                            "alias": "tesx",
-                                            "vars": {},
-                                            "name": "tesx",
-                                            "annotate": "Any",
-                                            "node": {
-                                                "line_no": [
-                                                    14,
-                                                    14
-                                                ],
-                                                "col_offset": [
-                                                    20,
-                                                    29
                                                 ]
                                             }
                                         },
@@ -245,12 +165,12 @@
                                             "annotate": "Any",
                                             "node": {
                                                 "line_no": [
-                                                    15,
-                                                    15
+                                                    17,
+                                                    17
                                                 ],
                                                 "col_offset": [
-                                                    51,
-                                                    52
+                                                    52,
+                                                    53
                                                 ]
                                             }
                                         },
@@ -261,8 +181,8 @@
                                             "annotate": "Any",
                                             "node": {
                                                 "line_no": [
-                                                    17,
-                                                    17
+                                                    19,
+                                                    19
                                                 ],
                                                 "col_offset": [
                                                     23,
@@ -275,12 +195,44 @@
                                     "annotate": "Any",
                                     "node": {
                                         "line_no": [
-                                            10,
-                                            17
+                                            12,
+                                            19
                                         ],
                                         "col_offset": [
                                             12,
                                             30
+                                        ]
+                                    }
+                                },
+                                "j": {
+                                    "alias": "j",
+                                    "vars": {},
+                                    "name": "j",
+                                    "annotate": "Any",
+                                    "node": {
+                                        "line_no": [
+                                            13,
+                                            13
+                                        ],
+                                        "col_offset": [
+                                            16,
+                                            22
+                                        ]
+                                    }
+                                },
+                                "tesx": {
+                                    "alias": "tesx",
+                                    "vars": {},
+                                    "name": "tesx",
+                                    "annotate": "Any",
+                                    "node": {
+                                        "line_no": [
+                                            16,
+                                            16
+                                        ],
+                                        "col_offset": [
+                                            20,
+                                            29
                                         ]
                                     }
                                 }
@@ -289,8 +241,8 @@
                             "annotate": "Type",
                             "node": {
                                 "line_no": [
-                                    4,
-                                    17
+                                    5,
+                                    19
                                 ],
                                 "col_offset": [
                                     8,
@@ -304,11 +256,59 @@
                     "node": {
                         "line_no": [
                             2,
-                            17
+                            19
                         ],
                         "col_offset": [
                             4,
                             30
+                        ]
+                    }
+                },
+                "a": {
+                    "alias": "a",
+                    "vars": {},
+                    "name": "a",
+                    "annotate": "Any",
+                    "node": {
+                        "line_no": [
+                            3,
+                            3
+                        ],
+                        "col_offset": [
+                            8,
+                            14
+                        ]
+                    }
+                },
+                "oke": {
+                    "alias": "oke",
+                    "vars": {},
+                    "name": "oke",
+                    "annotate": "Any",
+                    "node": {
+                        "line_no": [
+                            8,
+                            8
+                        ],
+                        "col_offset": [
+                            16,
+                            24
+                        ]
+                    }
+                },
+                "for_": {
+                    "alias": "for_",
+                    "vars": {},
+                    "name": "for_",
+                    "annotate": "Any",
+                    "node": {
+                        "line_no": [
+                            10,
+                            10
+                        ],
+                        "col_offset": [
+                            20,
+                            29
                         ]
                     }
                 }

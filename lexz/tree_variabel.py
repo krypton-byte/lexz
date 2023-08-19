@@ -3,6 +3,7 @@ Remapping Variable
 """
 from __future__ import annotations
 import ast
+import secrets
 from typing import Optional
 
 from lexz.alias_backend.default import AliasBackend
@@ -14,8 +15,9 @@ collect = Collector()
 
 @collect.Node(ast.Lambda)
 def Lambda(node: ast.Lambda, var: VariableMapping):
-    collect.send_node(node.args, var)
-    collect.send_node(node.body, var)
+    n_var=var.create('Lambda_%s' % hex(id(node)), 'Lambda_%s' % hex(id(node)), node=node)
+    collect.send_node(node.args, n_var)
+    collect.send_node(node.body, n_var)
     return var
 
 
@@ -44,8 +46,7 @@ def For(node: ast.For | ast.AsyncFor, var: VariableMapping):
 @collect.Node(ast.Name)
 def Name(node: ast.Name, var: VariableMapping):
     if isinstance(node.ctx, ast.Store):
-        var.create(node.id, node.id, node)
-        return var
+        return var.create(node.id, node.id, node)
     try:
         return var.find_variable(node.id)
     except IndexError:
@@ -54,9 +55,15 @@ def Name(node: ast.Name, var: VariableMapping):
 
 @collect.Node(ast.Assign)
 def Assign(node: ast.Assign, var: VariableMapping):
-    for target in node.targets:
-        collect.send_node(target, var)
-    collect.send_node(node.value, var)
+    if isinstance(node.value, ast.Lambda):
+        nvar = collect.send_node(node.targets[0], var)
+        n_var=var.create(nvar.current()['alias'], nvar.current()['alias'], node=node)
+        collect.send_node(node.value.args, n_var)
+        collect.send_node(node.value.body, n_var)
+    else:
+        for target in node.targets:
+            collect.send_node(target, var)
+        collect.send_node(node.value, var)
     return var
 
 

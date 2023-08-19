@@ -1,0 +1,2 @@
+class AliasBackendNotFound(Exception):
+    pass

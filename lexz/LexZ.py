@@ -3,9 +3,12 @@ import re
 import secrets
 import ast
 import types
-from typing import Callable, Dict, List, Literal, Optional, Type
+from typing import TYPE_CHECKING, Callable, Dict, List, Literal, Optional, Type
 import json
 import typing
+
+if TYPE_CHECKING:
+    from .alias_backend.default import AliasBackend
 try:
     from dict2object import JSObject
 except ModuleNotFoundError:
@@ -96,9 +99,11 @@ class VariableMapping:
         filename: str,
         vars: Optional[dict] = None,
         position: Optional[List] = None,
+        alias_backend: Optional[AliasBackend] = None
     ) -> None:
         self.position = position if position else []
         self.filename = filename
+        self.alias_backend = alias_backend
         self.vars = (
             vars
             if vars
@@ -166,6 +171,11 @@ class VariableMapping:
                     }
                 }
             )
+            if self.alias_backend:
+                var_cp = self.copy()
+                var_cp.position.append(name)
+                data['vars'][name]['alias'] = self.alias_backend.middleware(
+                    var_cp)
         else:
             self.vars["vars"].update(
                 {
@@ -177,7 +187,17 @@ class VariableMapping:
                         }
                 }
             )
-        return self.__class__(self.filename, self.vars, [*self.position, name])
+            if self.alias_backend:
+                var_cp = self.copy()
+                var_cp.position.append(name)
+                self.vars['vars'][name][
+                    'alias'] = self.alias_backend.middleware(var_cp)
+        return self.__class__(
+            self.filename,
+            self.vars,
+            [*self.position, name],
+            alias_backend=self.alias_backend
+        )
 
     def Normalizer(self):
         """

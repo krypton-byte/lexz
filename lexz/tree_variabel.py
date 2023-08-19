@@ -3,6 +3,9 @@ Remapping Variable
 """
 from __future__ import annotations
 import ast
+from typing import Optional
+
+from lexz.alias_backend.default import AliasBackend
 from .LexZ import Collector, VariableMapping
 
 
@@ -249,13 +252,24 @@ def Dict(node: ast.Dict, var: VariableMapping):
 
 
 class VarExtractor:
-    def __init__(self, filename: str, source: str) -> None:
+    def __init__(
+        self,
+        filename: str,
+        source: str,
+        alias_backend: Optional[AliasBackend] = None
+    ) -> None:
         self.filename = filename
-        self.var = VariableMapping(self.filename)
+        self.var = VariableMapping(
+            self.filename,
+            alias_backend=alias_backend
+        )
         self.source = source
 
     @classmethod
-    def from_file_source(cls, filename: str):
+    def from_file_source(
+        cls,
+        filename: str
+    ):
         return cls(open(filename, "r").read(), filename)
 
     def extract(self):

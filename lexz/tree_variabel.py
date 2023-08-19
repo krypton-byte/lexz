@@ -53,6 +53,7 @@ def Name(node: ast.Name, var: VariableMapping):
 def Assign(node: ast.Assign, var: VariableMapping):
     for target in node.targets:
         collect.send_node(target, var)
+    collect.send_node(node.value, var)
     return var
 
 
@@ -69,6 +70,8 @@ def FunctionDef(
     node: ast.FunctionDef | ast.AsyncFunctionDef,
     var: VariableMapping
 ):
+    for decorator in node.decorator_list:
+        collect.send_node(decorator, var)
     n_var = var.create(node.name, node.name, node)
     collect.send_node(node.args, n_var)
     for body in node.body:
@@ -116,8 +119,19 @@ def arg(node: ast.arg, var: VariableMapping):
     return var
 
 
+@collect.Node(ast.Tuple)
+def Tuple(node: ast.Tuple, var: VariableMapping):
+    for elt in node.elts:
+        collect.send_node(elt, var)
+    return var
+
+
 @collect.Node(ast.ClassDef)
 def ClassDef(node: ast.ClassDef, var: VariableMapping):
+    for decorator in node.decorator_list:
+        collect.send_node(decorator, var)
+    for base in node.bases:
+        collect.send_node(base, var)
     n_var = var.create_class(node.name, node.name, node)
     for body in node.body:
         collect.send_node(body, n_var)
@@ -200,6 +214,33 @@ def comprehension(node: ast.comprehension, var: VariableMapping):
     collect.send_node(node.iter, var)
     for if_ in node.ifs:
         collect.send_node(if_, var)
+    return var
+
+
+@collect.Node(ast.If)
+def If(node: ast.If, var: VariableMapping):
+    collect.send_node(node.test, var)
+    for body in node.body:
+        collect.send_node(body, var)
+    return var
+
+
+@collect.Node(ast.Compare)
+def Compare(node: ast.Compare, var: VariableMapping):
+    collect.send_node(node.left, var)
+    for op in node.ops:
+        collect.send_node(op, var)
+    for comparator in node.comparators:
+        collect.send_node(comparator, var)
+    return var
+
+@collect.Node(ast.Dict)
+def Dict(node: ast.Dict, var: VariableMapping):
+    for key in node.keys:
+        if key:
+            collect.send_node(key, var)
+    for val in node.values:
+        collect.send_node(val, var)
     return var
 
 

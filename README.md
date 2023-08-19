@@ -1,6 +1,18 @@
 # lexz
 Remapping Variable Using Abstract Syntax Tree [(AST)](https://docs.python.org/3/library/ast.html) 
+# Tutorial
+### Generate GraphViz File
+```bash
+python -m lexz -f test.py -g graph.dot
+```
+### Generate SVG Image
+```bash
+python -m lexz test.py -g graph.dot
+dot -Tsvg output.svg graph.dot
 
+#in single line
+ python -m lexz -f test.py -g /dev/stdout|dot -Tsvg -o output.svg
+```
 # Demo
 ### Input
 

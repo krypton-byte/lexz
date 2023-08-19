@@ -12,8 +12,8 @@ def main():
             version = vers[1]
         else:
             version = '0.0.1'
-        new = open('setup.py').read().replace('0.1', version)
-        with open('setup.py', 'w') as fil:
+        new = open('pyproject.toml').read().replace('0.1.0', version)
+        with open('pyproject.toml', 'w') as fil:
             print(new)
             fil.write(new)
 

@@ -9,22 +9,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v1
+    - name: Checkout Code
+      uses: actions/checkout@master
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.x'
-    - name: BUILD
+        python-version: "3.10"
+    - name: Install Poetry
       run: |
-        rm -rf build dist *.egg-info
+        curl -sSL https://install.python-poetry.org | python - -y
+    - name: Changes Version
+      run: |
         python resetup.py --version="${{ github.ref }}"
-    - name: Install dependencies
+    - name: Build and Publish Module ${{ github.ref }}
       run: |
-        python -m pip install --upgrade pip && pip install setuptools wheel twine
-    - name: Build and publish ${{ github.ref }}
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: |
-        python setup.py build sdist
-        twine upload dist/*
+        poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+        poetry build
+        poetry publish

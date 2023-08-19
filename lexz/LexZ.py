@@ -5,7 +5,16 @@ import ast
 import types
 from typing import Callable, Dict, List, Literal, Optional, Type
 import typing
-from dict2object import JSObject
+try:
+    from dict2object import JSObject
+except ModuleNotFoundError:
+    import pip
+    pip.main([
+        'install',
+        'git+https://github.com/krypton-byte/dict2object.git'
+    ])
+    from dict2object import JSObject
+
 from typing import TypeVar
 
 

@@ -1,6 +1,10 @@
 class HelloWorld:
     def __init__(self) -> None:
         self.a = 3
+        try:
+            self.trys = 2
+        except Exception:
+            self.kkkk = 9
 
         class HelloWorld2:
             def __init__(selx) -> None:

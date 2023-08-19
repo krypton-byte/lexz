@@ -3,10 +3,7 @@ Remapping Variable
 """
 from __future__ import annotations
 import ast
-from .LexZ import (
-    Collector,
-    VariableMapping
-)
+from .LexZ import Collector, VariableMapping
 
 
 collect = Collector()
@@ -165,6 +162,47 @@ def withitem(node: ast.withitem, var: VariableMapping):
     return var
 
 
+@collect.Node(ast.Try)
+def Try(node: ast.Try, var: VariableMapping):
+    for body in node.body:
+        collect.send_node(body, var)
+    for handler in node.handlers:
+        collect.send_node(handler, var)
+    return var
+
+
+@collect.Node(ast.ExceptHandler)
+def ExceptHandler(node: ast.ExceptHandler, var: VariableMapping):
+    if node.type:
+        collect.send_node(node.type, var)
+    for body in node.body:
+        collect.send_node(body, var)
+    return var
+
+
+@collect.Node(ast.GeneratorExp | ast.ListComp | ast.SetComp | ast.DictComp)
+def GeneratorExp(
+    node: ast.GeneratorExp | ast.ListComp | ast.SetComp | ast.DictComp,
+    var: VariableMapping,
+):
+    if isinstance(node, ast.DictComp):
+        collect.send_node(node.key, var)
+    else:
+        collect.send_node(node.elt, var)
+    for generator in node.generators:
+        collect.send_node(generator, var)
+    return var
+
+
+@collect.Node(ast.comprehension)
+def comprehension(node: ast.comprehension, var: VariableMapping):
+    collect.send_node(node.target, var)
+    collect.send_node(node.iter, var)
+    for if_ in node.ifs:
+        collect.send_node(if_, var)
+    return var
+
+
 # collect.send_node(ast.Name(id='a', ctx=ast.Store()),VariableMapping('e'))
 
 
@@ -176,10 +214,11 @@ class VarExtractor:
 
     @classmethod
     def from_file_source(cls, filename: str):
-        return cls(open(filename, 'r').read(), filename)
+        return cls(open(filename, "r").read(), filename)
 
     def extract(self):
         Node = ast.parse(self.source)
         for body in Node.body:
             collect.send_node(body, self.var)
+        # print(ast.dump(Node))
         return self.var

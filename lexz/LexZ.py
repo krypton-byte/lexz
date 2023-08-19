@@ -4,6 +4,7 @@ import secrets
 import ast
 import types
 from typing import Callable, Dict, List, Literal, Optional, Type
+import json
 import typing
 try:
     from dict2object import JSObject
@@ -103,6 +104,27 @@ class VariableMapping:
             if vars
             else {"filename": self.filename, "vars": {}, "annotate": "Module"}
         )
+
+    @classmethod
+    def from_json_file(
+        cls,
+        filename: Optional[str] = None,
+        parent: Optional[VariableMapping] = None
+    ):
+        var = cls(
+            filename,
+            json.load(open(filename, 'r'))
+        ) if filename else parent
+        if var:
+            if var.current()['annotate'] == 'Self':
+                print(var)
+                var.current()['vars'] = var.parent().current()
+            else:
+                for varname in var.current()['vars'].keys():
+                    cp = var.copy()
+                    cp.position.append(varname)
+                    cls.from_json_file(parent=cp)
+        return var
 
     def graph_gen(self):
         dot = GraphGen(self.Normalizer())

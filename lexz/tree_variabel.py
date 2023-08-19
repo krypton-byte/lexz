@@ -16,7 +16,6 @@ from typing import (
 )
 import typing
 from dict2object import JSObject
-import json
 from typing import TypeVar
 
 T = TypeVar("T")
@@ -409,21 +408,17 @@ def withitem(node: ast.withitem, var: VariableMapping):
 
 
 class VarExtractor:
-    def __init__(self, filename: str) -> None:
+    def __init__(self, filename: str, source: str) -> None:
         self.filename = filename
         self.var = VariableMapping(self.filename)
-        self.source = open(self.filename, "r").read()
+        self.source = source
 
-    def run(self):
+    @classmethod
+    def from_file_source(cls, filename: str):
+        return cls(open(filename, 'r').read(), filename)
+
+    def extract(self):
         Node = ast.parse(self.source)
         for body in Node.body:
             collect.send_node(body, self.var)
-        # print(self.var)
-        # print(ast.dump(Node))
-
-
-x = VarExtractor("test.py")
-x.run()
-open("variable_mapping_test.json", "w").write(json.dumps(x.var.Normalizer(), indent=4))
-# print(x.var)
-print(x.var.graph_gen())
+        return self.var

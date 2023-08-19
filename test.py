@@ -18,10 +18,12 @@ class HelloWorld:
                     print(f.read())
                 lambda ho: 123
 
-@(lambda:(call:=dfunc((arg:=2))))()
+@(lambda:(call := dfunc((arg := 2))))()
 def FunDec():
-    data ={'a': (a:=(b:=(c:=3)))}
+    data = {'a': (a := (b := (c := 3)))}
+    print(data, a, b, c)
     pass
+
 
 def dfunc(arg):
     def func(f):

@@ -5,6 +5,7 @@ description = "Time traveler for obfuscation or another purpose"
 authors = ["krypton-byte <rosid6434@gmail.com>"]
 license = "Apache-2.0"
 readme = "README.md"
+include = ["assets/output.svg"]
 
 [tool.poetry.dependencies]
 python = "^3.11"

@@ -234,6 +234,7 @@ def Compare(node: ast.Compare, var: VariableMapping):
         collect.send_node(comparator, var)
     return var
 
+
 @collect.Node(ast.Dict)
 def Dict(node: ast.Dict, var: VariableMapping):
     for key in node.keys:

@@ -52,4 +52,4 @@ def dfunc(arg):
 ```
 
 ### Result Graphviz( Dot Graph )
-![image](https://raw.githubusercontent.com/krypton-byte/lexz/master/assets/output.svg)
+![image](assets/output.svg)

@@ -27,5 +27,5 @@ class HelloWorld:
 
 ```
 
-### Result ( Dot Graph )
+### Result Graphviz( Dot Graph )
 ![image](assets/output.svg)

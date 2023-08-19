@@ -3,14 +3,7 @@ import re
 import secrets
 import ast
 import types
-from typing import (
-    Callable,
-    Dict,
-    List,
-    Literal,
-    Optional,
-    Type
-)
+from typing import Callable, Dict, List, Literal, Optional, Type
 import typing
 from dict2object import JSObject
 from typing import TypeVar
@@ -130,15 +123,28 @@ class VariableMapping:
                         "name": name,
                         "annotate": annotate,
                         "node": {
-                            "line_no": [node.lineno, node.end_lineno],
-                            "col_offset": [node.col_offset, node.end_col_offset],
+                            "line_no": [
+                                node.lineno,
+                                node.end_lineno
+                            ],
+                            "col_offset": [
+                                node.col_offset,
+                                node.end_col_offset
+                            ],
                         },
                     }
                 }
             )
         else:
             self.vars["vars"].update(
-                {name: {"alias": alias, "vars": {}, "name": name, "annotate": annotate}}
+                {
+                    name: {
+                        "alias": alias,
+                        "vars": {},
+                        "name": name,
+                        "annotate": annotate
+                        }
+                }
             )
         return self.__class__(self.filename, self.vars, [*self.position, name])
 
@@ -169,7 +175,11 @@ class VariableMapping:
                 for sc in post:
                     data = data["vars"][sc]
                 if not (data["vars"].get(vname) is None):
-                    return self.__class__(self.filename, self.vars, [*post, vname])
+                    return self.__class__(
+                        self.filename,
+                        self.vars,
+                        [*post, vname]
+                    )
         else:
             if vname in self.vars["vars"].keys():
                 return self.__class__(self.filename, self.vars, [vname])
@@ -208,7 +218,6 @@ class VariableMapping:
         )  # self.current().__str__()
 
 
-
 class Collector:
     def __init__(self) -> None:
         self.__stmt = []
@@ -236,7 +245,11 @@ class Collector:
 
         return Func
 
-    def send_node(self, node: ast.AST, var: VariableMapping) -> VariableMapping:
+    def send_node(
+        self,
+        node: ast.AST,
+        var: VariableMapping
+    ) -> VariableMapping:
         functions = []
         if ast.AST in node.__class__.__bases__:
             functions = self.__ast

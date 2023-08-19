@@ -1,0 +1,25 @@
+name: Unittest
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+    - uses: actions/checkout@master
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.9'
+    - name: Install Dependencies
+      run: |
+        python setup.py install
+        pip install flake8
+    - name: PEP8 Test
+      run: |
+        python3.9 -m flake8 xtempmail

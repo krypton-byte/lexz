@@ -9,8 +9,6 @@ from .LexZ import (
 )
 
 
-
-
 collect = Collector()
 
 
@@ -70,7 +68,10 @@ def Attribute(node: ast.Attribute, var: VariableMapping):
 
 
 @collect.Node(ast.FunctionDef | ast.AsyncFunctionDef)
-def FunctionDef(node: ast.FunctionDef | ast.AsyncFunctionDef, var: VariableMapping):
+def FunctionDef(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+    var: VariableMapping
+):
     n_var = var.create(node.name, node.name, node)
     collect.send_node(node.args, n_var)
     for body in node.body:

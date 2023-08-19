@@ -28,4 +28,4 @@ class HelloWorld:
 ```
 
 ### Result Graphviz( Dot Graph )
-![image](assets/output.svg)
+![image](https://raw.githubusercontent.com/krypton-byte/lexz/master/assets/output.svg)

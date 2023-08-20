@@ -3,15 +3,13 @@ Remapping Variable
 """
 from __future__ import annotations
 import ast
-import secrets
 from typing import Optional
 
 from lexz.alias_backend.default import AliasBackend
 from .LexZ import Collector, VariableMapping
-from dataclasses import dataclass
 from typing import TypeVar
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 collect = Collector()
@@ -19,7 +17,9 @@ collect = Collector()
 
 @collect.Node(ast.Lambda)
 def Lambda(node: ast.Lambda, var: VariableMapping):
-    n_var=var.create('Lambda_%s' % hex(id(node)), 'Lambda_%s' % hex(id(node)), node=node)
+    n_var = var.create(
+        "Lambda_%s" % hex(id(node)), "Lambda_%s" % hex(id(node)), node=node
+    )
     collect.send_node(node.args, n_var)
     collect.send_node(node.body, n_var)
     return var
@@ -61,32 +61,40 @@ def Name(node: ast.Name, var: VariableMapping):
 def Assign(node: ast.Assign, var: VariableMapping):
     if isinstance(node.value, ast.Lambda):
         nvar = collect.send_node(node.targets[0], var)
-        n_var = var.create(nvar.current()['alias'], nvar.current()['alias'], node=node)
+        n_var = var.create(
+            nvar.current()["alias"],
+            nvar.current()["alias"],
+            node=node
+        )
         collect.send_node(node.value.args, n_var)
         collect.send_node(node.value.body, n_var)
     else:
         for target in node.targets:
-            n_var=collect.send_node(target, var)
-            if node.targets.__len__() == 1 and isinstance(node.value, (ast.Name, ast.Constant)):
+            n_var = collect.send_node(target, var)
+            if node.targets.__len__() == 1 and isinstance(
+                node.value, (ast.Name, ast.Constant)
+            ):
+                current = n_var.current()
                 if isinstance(node.value, ast.Constant):
-                    n_var.current()['annotate'] = type(node.value.value).__name__
+                    current["annotate"] = type(node.value.value).__name__
                 elif isinstance(node.value, ast.Name):
                     type_assgn = var.find_variable(node.value.id).current()
-                    n_var.current()['vars'] = type_assgn['vars']
-                    n_var.current()['annotate'] = type_assgn['annotate']
+                    current["vars"] = type_assgn["vars"]
+                    current["annotate"] = type_assgn["annotate"]
         collect.send_node(node.value, var)
     return var
 
 
 @collect.Node(ast.AnnAssign)
 def AnnAssign(node: ast.AnnAssign, var: VariableMapping):
-    annotation = 'Any'
+    annotation = "Any"
     if isinstance(node.annotation, ast.Name):
         annotation = node.annotation.id
     elif isinstance(node.annotation, ast.Constant):
         annotation = node.value.__str__()
-    collect.send_node(node.target, var).current()['annotate'] = annotation
+    collect.send_node(node.target, var).current()["annotate"] = annotation
     return var
+
 
 @collect.Node(ast.Attribute)
 def Attribute(node: ast.Attribute, var: VariableMapping):
@@ -141,7 +149,7 @@ def arg(node: ast.arg, var: VariableMapping):
         node.arg,
         node,
         annotate=(
-            var.parent().current()['name']
+            var.parent().current()["name"]
             if var.parent().current()["annotate"] == "Type"
             and not var.current()["vars"].__len__()
             else "Any"
@@ -276,10 +284,7 @@ def Dict(node: ast.Dict, var: VariableMapping):
     return var
 
 
-
 # collect.send_node(ast.Name(id='a', ctx=ast.Store()),VariableMapping('e'))
-
-
 class VarExtractor:
     def __init__(
         self,
@@ -288,17 +293,11 @@ class VarExtractor:
         alias_backend: Optional[AliasBackend] = None
     ) -> None:
         self.filename = filename
-        self.var = VariableMapping(
-            self.filename,
-            alias_backend=alias_backend
-        )
+        self.var = VariableMapping(self.filename, alias_backend=alias_backend)
         self.source = source
 
     @classmethod
-    def from_file_source(
-        cls,
-        filename: str
-    ):
+    def from_file_source(cls, filename: str):
         return cls(open(filename, "r").read(), filename)
 
     def extract(self):

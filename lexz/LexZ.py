@@ -85,7 +85,11 @@ class GraphGen:
                     r_name = "_" + secrets.token_hex(5)
                     self.initial.append(
                         '%s [label="%s" shape="%s"]'
-                        % (r_name, node_val['name'], self.shape(node_val["annotate"]))
+                        % (
+                            r_name,
+                            node_val['name'],
+                            self.shape(node_val["annotate"])
+                        )
                     )
                     self.arrow.append(f"{parent} -> {r_name}")
                     self.gen(node_val, r_name)
@@ -110,9 +114,13 @@ class VariableMapping:
         self.vars = (
             vars
             if vars
-            else {"filename": self.filename, "vars": {}, "annotate": "Module", "name": re.findall(
-            r"^[a-z][a-z0-9]+", self.filename, re.IGNORECASE
-        )[0]}
+            else {
+                "filename": self.filename,
+                "vars": {},
+                "annotate": "Module",
+                "name": re.findall(
+                    r"^[a-z][a-z0-9]+", self.filename, re.IGNORECASE
+                )[0]}
         )
 
     @classmethod
@@ -127,7 +135,8 @@ class VariableMapping:
         ) if filename else parent
         if var:
             try:
-                var.current()['vars'] = var.find_variable(var.current()['name'])
+                var.current()['vars'] = var.find_variable(
+                    var.current()['name'])
             except Exception:
                 for varname in var.current()['vars'].keys():
                     cp = var.copy()
@@ -180,7 +189,9 @@ class VariableMapping:
             if self.alias_backend:
                 var_cp = self.copy()
                 var_cp.position.append(hex(id(node)))
-                data['vars'][hex(id(node))]['alias'] = self.alias_backend.middleware(
+                data['vars'][
+                    hex(id(node))
+                ]['alias'] = self.alias_backend.middleware(
                     var_cp)
         else:
             self.vars["vars"].update(
@@ -237,10 +248,10 @@ class VariableMapping:
             for addr, value in self.vars['vars'].items():
                 if value['name'] == vname:
                     return self.__class__(
-                    self.filename,
-                    self.vars,
-                    [addr]
-                )
+                        self.filename,
+                        self.vars,
+                        [addr]
+                    )
         raise IndexError
 
     def delete(self):
@@ -319,4 +330,3 @@ class Collector:
             if isinstance(node, ast_type):
                 return func(node, var)
         return var
-

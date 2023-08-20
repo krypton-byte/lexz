@@ -1,7 +1,5 @@
 import argparse
 import json
-
-import dict2object
 from .alias_backend.backend import backends, get_backend_by_name
 from . import VarExtractor
 
@@ -38,4 +36,3 @@ if parse.g:
     parse.g.write(extract.graph_gen())
 if parse.o:
     parse.o.write(json.dumps(extract.Normalizer(), indent=4))
-# print(dict2object.JSObject('  ').fromDict(extract.vars))

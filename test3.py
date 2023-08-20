@@ -1,8 +1,11 @@
-# from lexz.tree_variabel import VarExtractor
+from __future__ import annotations
+import ast
+from lexz.tree_variabel import collect, VariableMapping
+var = VariableMapping('test.py')
+for body in ast.parse(open('test.py').read()).body:
+    print(collect.send_node(body, var))
 
-
-# VarExtractor('test2.py', open('test2.py', 'r').read()).extract()
-class H:
-    ___h = 2
-
-H.___h
+class a:
+    def __init__(self) -> None:
+        self.b=4
+        

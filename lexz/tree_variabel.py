@@ -8,6 +8,10 @@ from typing import Optional
 
 from lexz.alias_backend.default import AliasBackend
 from .LexZ import Collector, VariableMapping
+from dataclasses import dataclass
+from typing import TypeVar
+
+T = TypeVar('T')
 
 
 collect = Collector()
@@ -57,15 +61,32 @@ def Name(node: ast.Name, var: VariableMapping):
 def Assign(node: ast.Assign, var: VariableMapping):
     if isinstance(node.value, ast.Lambda):
         nvar = collect.send_node(node.targets[0], var)
-        n_var=var.create(nvar.current()['alias'], nvar.current()['alias'], node=node)
+        n_var = var.create(nvar.current()['alias'], nvar.current()['alias'], node=node)
         collect.send_node(node.value.args, n_var)
         collect.send_node(node.value.body, n_var)
     else:
         for target in node.targets:
-            collect.send_node(target, var)
+            n_var=collect.send_node(target, var)
+            if node.targets.__len__() == 1 and isinstance(node.value, (ast.Name, ast.Constant)):
+                if isinstance(node.value, ast.Constant):
+                    n_var.current()['annotate'] = type(node.value.value).__name__
+                elif isinstance(node.value, ast.Name):
+                    type_assgn = var.find_variable(node.value.id).current()
+                    n_var.current()['vars'] = type_assgn['vars']
+                    n_var.current()['annotate'] = type_assgn['annotate']
         collect.send_node(node.value, var)
     return var
 
+
+@collect.Node(ast.AnnAssign)
+def AnnAssign(node: ast.AnnAssign, var: VariableMapping):
+    annotation = 'Any'
+    if isinstance(node.annotation, ast.Name):
+        annotation = node.annotation.id
+    elif isinstance(node.annotation, ast.Constant):
+        annotation = node.value.__str__()
+    collect.send_node(node.target, var).current()['annotate'] = annotation
+    return var
 
 @collect.Node(ast.Attribute)
 def Attribute(node: ast.Attribute, var: VariableMapping):
@@ -120,7 +141,7 @@ def arg(node: ast.arg, var: VariableMapping):
         node.arg,
         node,
         annotate=(
-            "Self"
+            var.parent().current()['name']
             if var.parent().current()["annotate"] == "Type"
             and not var.current()["vars"].__len__()
             else "Any"
@@ -255,6 +276,7 @@ def Dict(node: ast.Dict, var: VariableMapping):
     return var
 
 
+
 # collect.send_node(ast.Name(id='a', ctx=ast.Store()),VariableMapping('e'))
 
 
@@ -283,5 +305,5 @@ class VarExtractor:
         Node = ast.parse(self.source)
         for body in Node.body:
             collect.send_node(body, self.var)
-        # print(ast.dump(Node))
+        print(ast.dump(Node))
         return self.var

@@ -77,15 +77,18 @@ class GraphGen:
     def gen(self, var: Optional[Dict] = None, parent: Optional[str] = None):
         r_name = "_" + secrets.token_hex(5)
         n_var = var if var else self.var
+        ignore = []
         if parent:
-            for node_name, node_val in n_var["vars"].items():
-                r_name = "_" + secrets.token_hex(5)
-                self.initial.append(
-                    '%s [label="%s" shape="%s"]'
-                    % (r_name, node_name, self.shape(node_val["annotate"]))
-                )
-                self.arrow.append(f"{parent} -> {r_name}")
-                self.gen(node_val, r_name)
+            for node_val in n_var["vars"].values():
+                if node_val['name'] not in ignore:
+                    ignore.append(node_val['name'])
+                    r_name = "_" + secrets.token_hex(5)
+                    self.initial.append(
+                        '%s [label="%s" shape="%s"]'
+                        % (r_name, node_val['name'], self.shape(node_val["annotate"]))
+                    )
+                    self.arrow.append(f"{parent} -> {r_name}")
+                    self.gen(node_val, r_name)
         else:
             self.initial.append(
                 '%s [label="%s" shape="folder"]' % (r_name, n_var["filename"])
@@ -107,7 +110,9 @@ class VariableMapping:
         self.vars = (
             vars
             if vars
-            else {"filename": self.filename, "vars": {}, "annotate": "Module"}
+            else {"filename": self.filename, "vars": {}, "annotate": "Module", "name": re.findall(
+            r"^[a-z][a-z0-9]+", self.filename, re.IGNORECASE
+        )[0]}
         )
 
     @classmethod
@@ -121,10 +126,9 @@ class VariableMapping:
             json.load(open(filename, 'r'))
         ) if filename else parent
         if var:
-            if var.current()['annotate'] == 'Self':
-                print(var)
-                var.current()['vars'] = var.parent().current()
-            else:
+            try:
+                var.current()['vars'] = var.find_variable(var.current()['name'])
+            except Exception:
                 for varname in var.current()['vars'].keys():
                     cp = var.copy()
                     cp.position.append(varname)
@@ -149,13 +153,15 @@ class VariableMapping:
             data = self.vars
             for i in self.position:
                 data = data["vars"][i]
+            try:
+                vars_data = self.find_variable(annotate).current()['vars']
+            except Exception:
+                vars_data = {}
             data["vars"].update(
                 {
-                    name: {
+                    hex(id(node)): {
                         "alias": alias,
-                        "vars": self.parent().current()["vars"]
-                        if annotate == "Self"
-                        else {},
+                        "vars": vars_data,
                         "name": name,
                         "annotate": annotate,
                         "node": {
@@ -163,7 +169,7 @@ class VariableMapping:
                                 node.lineno,
                                 node.end_lineno
                             ],
-                            "col_offset": [
+                            "col": [
                                 node.col_offset,
                                 node.end_col_offset
                             ],
@@ -173,13 +179,13 @@ class VariableMapping:
             )
             if self.alias_backend:
                 var_cp = self.copy()
-                var_cp.position.append(name)
-                data['vars'][name]['alias'] = self.alias_backend.middleware(
+                var_cp.position.append(hex(id(node)))
+                data['vars'][hex(id(node))]['alias'] = self.alias_backend.middleware(
                     var_cp)
         else:
             self.vars["vars"].update(
                 {
-                    name: {
+                    hex(id(node)): {
                         "alias": alias,
                         "vars": {},
                         "name": name,
@@ -189,13 +195,13 @@ class VariableMapping:
             )
             if self.alias_backend:
                 var_cp = self.copy()
-                var_cp.position.append(name)
+                var_cp.position.append(hex(id(node)))
                 self.vars['vars'][name][
                     'alias'] = self.alias_backend.middleware(var_cp)
         return self.__class__(
             self.filename,
             self.vars,
-            [*self.position, name],
+            [*self.position, hex(id(node))],
             alias_backend=self.alias_backend
         )
 
@@ -220,20 +226,21 @@ class VariableMapping:
         find variable from down to top
         """
         if self.position:
-            for i in range(self.position.__len__(), 0, -1):
-                post = self.position.copy()[:i]
-                data = self.vars
-                for sc in post:
-                    data = data["vars"][sc]
-                if not (data["vars"].get(vname) is None):
-                    return self.__class__(
-                        self.filename,
-                        self.vars,
-                        [*post, vname]
-                    )
+            stack = self.copy()
+            for _ in range(self.position.__len__() + 1):
+                for addr, value in stack.current()['vars'].items():
+                    if value['name'] == vname:
+                        stack.position.append(addr)
+                        return stack
+                stack = stack.parent()
         else:
-            if vname in self.vars["vars"].keys():
-                return self.__class__(self.filename, self.vars, [vname])
+            for addr, value in self.vars['vars'].items():
+                if value['name'] == vname:
+                    return self.__class__(
+                    self.filename,
+                    self.vars,
+                    [addr]
+                )
         raise IndexError
 
     def delete(self):
@@ -312,3 +319,4 @@ class Collector:
             if isinstance(node, ast_type):
                 return func(node, var)
         return var
+

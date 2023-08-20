@@ -1,5 +1,11 @@
 # lexz
 Remapping Variable Using Abstract Syntax Tree [(AST)](https://docs.python.org/3/library/ast.html) 
+# Task
+- [x] Graph
+- [x] Aliasing Variable
+- [x] Alias Backend
+- [x] JSON
+- [ ] Fully support annotation
 # Tutorial
 ### Generate GraphViz File
 ```bash

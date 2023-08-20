@@ -122,6 +122,17 @@ class VariableMapping:
                     r"^[a-z][a-z0-9]+", self.filename, re.IGNORECASE
                 )[0]}
         )
+    
+    @property
+    def ismagic(self):
+        if self.current()['name'].startswith('__'):
+            try:
+                annotate_available = self.find_variable(self.current()['annotate']).current()
+            except Exception:
+                annotate_available = {}
+            if annotate_available and annotate_available.get('annotate') == 'Type' or self.parent().current()['annotate'] == 'Type':
+                return True
+        return False
 
     @classmethod
     def from_json_file(
@@ -207,7 +218,7 @@ class VariableMapping:
             if self.alias_backend:
                 var_cp = self.copy()
                 var_cp.position.append(hex(id(node)))
-                self.vars['vars'][name][
+                self.vars['vars'][hex(id(node))][
                     'alias'] = self.alias_backend.middleware(var_cp)
         return self.__class__(
             self.filename,

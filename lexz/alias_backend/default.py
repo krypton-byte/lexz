@@ -28,20 +28,15 @@ class AliasBackend(metaclass=ABCMeta):
         self.reference = []
         self.ref = ref
         self.__preinit__()
-
     def middleware(self, var: VariableMapping) -> str:
-        result = self.gen_alias(var)
-        if (
-            result != var.current()["alias"]
-            and result.startswith("__")
-            and var.parent().current()["annotate"] in ["Self", "Type"]
-        ):
-            raise DoubleUnderscoreNotAllowed()
-        if self.ref:
-            if result in self.reference:
-                raise ReferenceError()
-            self.reference.append(result)
-        return result
+        if not var.ismagic:
+            result = self.gen_alias(var)
+            if self.ref:
+                if result in self.reference:
+                    raise ReferenceError()
+                self.reference.append(result)
+            return result
+        return var.current()['name']
 
     @abstractmethod
     def gen_alias(self, var: VariableMapping) -> str:

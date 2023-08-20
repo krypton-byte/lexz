@@ -304,5 +304,5 @@ class VarExtractor:
         Node = ast.parse(self.source)
         for body in Node.body:
             collect.send_node(body, self.var)
-        print(ast.dump(Node))
+        # print(ast.dump(Node))
         return self.var

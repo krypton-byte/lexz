@@ -1,8 +1,10 @@
 from __future__ import annotations
+import base64
 import re
 import secrets
 import ast
 import types
+import pickle
 from typing import (
     TYPE_CHECKING,
     Callable,
@@ -52,6 +54,20 @@ def remove_circular_refs(ob, _seen=None):
     # remove id again; only *nested* references count
     _seen.remove(id(ob))
     return res
+
+
+def normalize_vars(var: dict, _seen: Optional[set] = None):
+    if _seen is None:
+        _seen = set()
+    for value in var.values():
+        value['annotate'] = base64.b64encode(
+            pickle.dumps(value['annotate'])).decode()
+        if id(value['vars']) in _seen:
+            value['vars'] = {}
+        else:
+            _seen.add(id(value['vars']))
+            normalize_vars(value['vars'], _seen)
+    return var
 
 
 class GraphGen:
@@ -107,6 +123,10 @@ class GraphGen:
                 '%s [label="%s" shape="folder"]' % (r_name, n_var["filename"])
             )
             self.gen(n_var, r_name)
+
+
+class Incomplete:
+    pass
 
 
 class VariableMapping:
@@ -333,21 +353,8 @@ class Collector:
         node: Sequence[ast.AST | ast.ExceptHandler],
         var: VariableMapping
     ):
-        last = []
         for body in node:
-            if isinstance(
-                body, (
-                    ast.Lambda,
-                    ast.ClassDef,
-                    ast.FunctionDef,
-                    ast.AsyncFunctionDef
-                )
-            ):
-                last.append(body)
-            else:
-                self.send_node(body, var)
-        for last_body in last:
-            self.send_node(last_body, var)
+            self.send_node(body, var)
         return var
 
     def Node(

@@ -77,9 +77,12 @@ def Assign(node: ast.Assign, var: VariableMapping):
                 if isinstance(node.value, ast.Constant):
                     current["annotate"] = type(node.value.value).__name__
                 elif isinstance(node.value, ast.Name):
-                    type_assgn = var.find_variable(node.value.id).current()
-                    current["vars"] = type_assgn["vars"]
-                    current["annotate"] = type_assgn["annotate"]
+                    try:
+                        type_assgn = var.find_variable(node.value.id).current()
+                        current["vars"] = type_assgn["vars"]
+                        current["annotate"] = type_assgn["annotate"]
+                    except Exception:
+                        current['annotate'] = 'Incomplete'
         collect.send_node(node.value, var)
     return var
 

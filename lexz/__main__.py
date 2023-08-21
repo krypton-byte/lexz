@@ -1,7 +1,8 @@
 import argparse
 import json
 from .alias_backend.backend import backends, get_backend_by_name
-from . import VarExtractor
+from .debug import log
+from .tree_variabel import VarExtractor
 
 
 arg = argparse.ArgumentParser()
@@ -35,4 +36,5 @@ extract = extractor.extract()
 if parse.g:
     parse.g.write(extract.graph_gen())
 if parse.o:
+    log.debug(extract.Normalizer())
     parse.o.write(json.dumps(extract.Normalizer(), indent=4))

@@ -2,6 +2,7 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 import secrets
 from typing import TYPE_CHECKING
+from ..debug import log
 import random
 
 
@@ -36,6 +37,7 @@ class AliasBackend(metaclass=ABCMeta):
                 if result in self.reference:
                     raise ReferenceError()
                 self.reference.append(result)
+            log.debug('%s -> %s' % (var.current()['name'], result))
             return result
         return var.current()['name']
 

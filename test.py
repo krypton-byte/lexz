@@ -31,5 +31,7 @@
 #             return f(*args, **kwargs)
 #         return execute
 #     return func
-a=1
-b=a
+
+def xyz():
+    a=b
+b=1

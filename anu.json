@@ -1,0 +1,55 @@
+{
+    "filename": "test.py",
+    "vars": {
+        "0x7f70753c5870": {
+            "alias": "REP_0x683016d6c0",
+            "vars": {},
+            "name": "b",
+            "annotate": "int",
+            "node": {
+                "line_no": [
+                    37,
+                    37
+                ],
+                "col": [
+                    0,
+                    1
+                ]
+            }
+        },
+        "0x7f707536fbb0": {
+            "alias": "XNAND_0xbdf5ddb115",
+            "vars": {},
+            "name": "xyz",
+            "annotate": "Any",
+            "node": {
+                "line_no": [
+                    35,
+                    36
+                ],
+                "col": [
+                    0,
+                    7
+                ]
+            }
+        },
+        "0x7f70753c57b0": {
+            "alias": "OUT_0x536ed6a451",
+            "vars": {},
+            "name": "a",
+            "annotate": "int",
+            "node": {
+                "line_no": [
+                    36,
+                    36
+                ],
+                "col": [
+                    4,
+                    5
+                ]
+            }
+        }
+    },
+    "annotate": "Module",
+    "name": "test"
+}

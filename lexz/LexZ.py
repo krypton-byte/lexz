@@ -3,7 +3,16 @@ import re
 import secrets
 import ast
 import types
-from typing import TYPE_CHECKING, Callable, Dict, List, Literal, Optional, Type
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Type
+)
 import json
 import typing
 
@@ -122,15 +131,20 @@ class VariableMapping:
                     r"^[a-z][a-z0-9]+", self.filename, re.IGNORECASE
                 )[0]}
         )
-    
+
     @property
     def ismagic(self):
         if self.current()['name'].startswith('__'):
             try:
-                annotate_available = self.find_variable(self.current()['annotate']).current()
+                annotate_available = self.find_variable(
+                    self.current()['annotate']).current()
             except Exception:
                 annotate_available = {}
-            if annotate_available and annotate_available.get('annotate') == 'Type' or self.parent().current()['annotate'] == 'Type':
+            if (
+                annotate_available
+                and annotate_available.get('annotate') == 'Type'
+                or self.parent().current()['annotate'] == 'Type'
+            ):
                 return True
         return False
 
@@ -147,7 +161,7 @@ class VariableMapping:
         if var:
             try:
                 var.current()['vars'] = var.find_variable(
-                    var.current()['name'])
+                    var.current()['annotate'])
             except Exception:
                 for varname in var.current()['vars'].keys():
                     cp = var.copy()
@@ -211,7 +225,17 @@ class VariableMapping:
                         "alias": alias,
                         "vars": {},
                         "name": name,
-                        "annotate": annotate
+                        "annotate": annotate,
+                        "node": {
+                            "line_no": [
+                                node.lineno,
+                                node.end_lineno
+                            ],
+                            "col": [
+                                node.col_offset,
+                                node.end_col_offset
+                            ],
+                        },
                         }
                 }
             )
@@ -303,6 +327,28 @@ class Collector:
         self.__stmt = []
         self.__expr = []
         self.__ast = []
+
+    def send_nodes(
+        self,
+        node: Sequence[ast.AST | ast.ExceptHandler],
+        var: VariableMapping
+    ):
+        last = []
+        for body in node:
+            if isinstance(
+                body, (
+                    ast.Lambda,
+                    ast.ClassDef,
+                    ast.FunctionDef,
+                    ast.AsyncFunctionDef
+                )
+            ):
+                last.append(body)
+            else:
+                self.send_node(body, var)
+        for last_body in last:
+            self.send_node(last_body, var)
+        return var
 
     def Node(
         self, ast_node: typing.Union[Type[T], types.UnionType]

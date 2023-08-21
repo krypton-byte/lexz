@@ -28,6 +28,7 @@ class AliasBackend(metaclass=ABCMeta):
         self.reference = []
         self.ref = ref
         self.__preinit__()
+
     def middleware(self, var: VariableMapping) -> str:
         if not var.ismagic:
             result = self.gen_alias(var)

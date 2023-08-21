@@ -42,8 +42,7 @@ def NamedExpr(node: ast.NamedExpr, var: VariableMapping):
 def For(node: ast.For | ast.AsyncFor, var: VariableMapping):
     collect.send_node(node.target, var)
     collect.send_node(node.iter, var)
-    for body in node.body:
-        collect.send_node(body, var)
+    collect.send_nodes(node.body, var)
     return var
 
 
@@ -109,12 +108,10 @@ def FunctionDef(
     node: ast.FunctionDef | ast.AsyncFunctionDef,
     var: VariableMapping
 ):
-    for decorator in node.decorator_list:
-        collect.send_node(decorator, var)
+    collect.send_nodes(node.decorator_list, var)
     n_var = var.create(node.name, node.name, node)
     collect.send_node(node.args, n_var)
-    for body in node.body:
-        collect.send_node(body, n_var)
+    collect.send_nodes(node.body, var)
     return var
 
 
@@ -160,27 +157,22 @@ def arg(node: ast.arg, var: VariableMapping):
 
 @collect.Node(ast.Tuple)
 def Tuple(node: ast.Tuple, var: VariableMapping):
-    for elt in node.elts:
-        collect.send_node(elt, var)
+    collect.send_nodes(node.elts, var)
     return var
 
 
 @collect.Node(ast.ClassDef)
 def ClassDef(node: ast.ClassDef, var: VariableMapping):
-    for decorator in node.decorator_list:
-        collect.send_node(decorator, var)
-    for base in node.bases:
-        collect.send_node(base, var)
+    collect.send_nodes(node.decorator_list, var)
+    collect.send_nodes(node.bases, var)
     n_var = var.create_class(node.name, node.name, node)
-    for body in node.body:
-        collect.send_node(body, n_var)
+    collect.send_nodes(node.body, n_var)
     return var
 
 
 @collect.Node(ast.Import)
 def Import(node: ast.Import, var: VariableMapping):
-    for i in node.names:
-        collect.send_node(i, var)
+    collect.send_nodes(node.names, var)
     return var
 
 
@@ -193,17 +185,14 @@ def alias(node: ast.alias, var: VariableMapping):
 @collect.Node(ast.Call)
 def Call(node: ast.Call, var: VariableMapping):
     collect.send_node(node.func, var)
-    for arg in node.args:
-        collect.send_node(arg, var)
+    collect.send_nodes(node.args, var)
     return var
 
 
 @collect.Node(ast.With | ast.AsyncWith)
 def With(node: ast.With | ast.AsyncWith, var: VariableMapping):
-    for item in node.items:
-        collect.send_node(item, var)
-    for body in node.body:
-        collect.send_node(body, var)
+    collect.send_nodes(node.items, var)
+    collect.send_nodes(node.body, var)
     return var
 
 
@@ -217,10 +206,8 @@ def withitem(node: ast.withitem, var: VariableMapping):
 
 @collect.Node(ast.Try)
 def Try(node: ast.Try, var: VariableMapping):
-    for body in node.body:
-        collect.send_node(body, var)
-    for handler in node.handlers:
-        collect.send_node(handler, var)
+    collect.send_nodes(node.body, var)
+    collect.send_nodes(node.handlers, var)
     return var
 
 
@@ -228,8 +215,7 @@ def Try(node: ast.Try, var: VariableMapping):
 def ExceptHandler(node: ast.ExceptHandler, var: VariableMapping):
     if node.type:
         collect.send_node(node.type, var)
-    for body in node.body:
-        collect.send_node(body, var)
+    collect.send_nodes(node.body, var)
     return var
 
 
@@ -242,8 +228,7 @@ def GeneratorExp(
         collect.send_node(node.key, var)
     else:
         collect.send_node(node.elt, var)
-    for generator in node.generators:
-        collect.send_node(generator, var)
+    collect.send_nodes(node.generators, var)
     return var
 
 
@@ -251,16 +236,14 @@ def GeneratorExp(
 def comprehension(node: ast.comprehension, var: VariableMapping):
     collect.send_node(node.target, var)
     collect.send_node(node.iter, var)
-    for if_ in node.ifs:
-        collect.send_node(if_, var)
+    collect.send_nodes(node.ifs, var)
     return var
 
 
 @collect.Node(ast.If)
 def If(node: ast.If, var: VariableMapping):
     collect.send_node(node.test, var)
-    for body in node.body:
-        collect.send_node(body, var)
+    collect.send_nodes(node.body, var)
     return var
 
 
@@ -269,8 +252,7 @@ def Compare(node: ast.Compare, var: VariableMapping):
     collect.send_node(node.left, var)
     for op in node.ops:
         collect.send_node(op, var)
-    for comparator in node.comparators:
-        collect.send_node(comparator, var)
+    collect.send_nodes(node.comparators, var)
     return var
 
 
@@ -279,8 +261,7 @@ def Dict(node: ast.Dict, var: VariableMapping):
     for key in node.keys:
         if key:
             collect.send_node(key, var)
-    for val in node.values:
-        collect.send_node(val, var)
+    collect.send_nodes(node.values, var)
     return var
 
 
@@ -302,7 +283,6 @@ class VarExtractor:
 
     def extract(self):
         Node = ast.parse(self.source)
-        for body in Node.body:
-            collect.send_node(body, self.var)
+        collect.send_nodes(Node.body, self.var)
         # print(ast.dump(Node))
         return self.var
